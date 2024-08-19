@@ -19,28 +19,28 @@ import { ProductsModule } from './products/products.module';
     // Модуль TypeORM
     TypeOrmModule.forRoot({
       // Тип базы данных
-      type: process.env.TYPEORM_CONNECTION as 'postgres',
+      type: 'postgres',
 
       // Хост базы данных
-      host: process.env.TYPEORM_HOST,
+      host: 'localhost',
 
       // Порт базы данных
-      port: +process.env.TYPEORM_PORT,
+      port: 5432,
 
       // Имя пользователя базы данных
-      username: process.env.TYPEORM_USERNAME,
+      username: 'postgres',
 
       // Пароль базы данных
-      password: process.env.TYPEORM_PASSWORD,
+      password: 'pass123',
 
       // Имя базы данных
-      database: process.env.DATABASE,
+      database: 'postgres',
 
       // Автоматическая загрузка сущностей
-      autoLoadEntities: process.env.TYPEORM_AUTOLOAD_ENTITIES === 'true',
+      autoLoadEntities: true,
 
       // Синхронизация базы данных
-      synchronize: process.env.TYPEORM_SYNCHRONIZE === 'true',
+      synchronize: true,
     }),
 
     // Модуль аутентификации и авторизации
