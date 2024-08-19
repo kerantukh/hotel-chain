@@ -33,7 +33,7 @@ export class PolicyHandlerStorage {
     const handler = this.collection.get(policyCls);
     if (!handler) {
       throw new Error(
-        `"${policyCls.name}" does not have the associated handler`,
+        `"${policyCls.name}" не имеет связанного обрабочика политики`,
       );
     }
     return handler;
