@@ -13,7 +13,6 @@ import { AccessTokenGuard } from './authentication/guards/acces-token.guard';
 import { AuthenticationGuard } from './authentication/guards/authentication.guard';
 import { RefreshTokenIdsStorage } from './authentication/refresh-token-ids.storage';
 import { RolesGuard } from './authorization/guards/roles.guard';
-import { PermissionGuard } from './authorization/guards/permissions.guard';
 import { ApiKeysService } from './authentication/api-keys.service';
 import { ApiKey } from 'src/users/api-keys/entities/api-key.entity';
 import { ApiKeyGuard } from './authentication/guards/api-key.guard';
@@ -91,14 +90,6 @@ import { Redis } from 'ioredis';
       provide: APP_GUARD,
       useClass: RolesGuard,
     },
-    /**
-     * Импортируем провайдер гварда прав
-     */
-    {
-      provide: APP_GUARD,
-      useClass: PermissionGuard,
-    },
-
     AccessTokenGuard,
     ApiKeyGuard,
     RefreshTokenIdsStorage,

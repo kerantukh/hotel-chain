@@ -6,10 +6,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Role } from '../enums/role.enum';
-import {
-  Permission,
-  PermissionType,
-} from 'src/iam/authorization/permission.type';
+
 import { ApiKey } from '../api-keys/entities/api-key.entity';
 
 /**
@@ -54,7 +51,5 @@ export class User {
    NOTE: Having the "permissions" column in combination with the "role"
     likely does not make sense.
   */
-  @Column({ enum: Permission, default: [], type: 'json' })
-  // Список разрешений, привязанных к пользователю
-  permissions: PermissionType[];
+
 }

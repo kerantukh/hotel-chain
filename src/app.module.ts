@@ -3,7 +3,7 @@ import { UsersModule } from './users/users.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { IamModule } from './iam/iam.module';
 import { ConfigModule } from '@nestjs/config';
-import { ProductsModule } from './products/products.module';
+import { ListingsModule } from './listings/listings.module';
 
 /**
  * Главный модуль приложения
@@ -46,8 +46,7 @@ import { ProductsModule } from './products/products.module';
     // Модуль аутентификации и авторизации
     IamModule,
 
-    // Модуль продуктов
-    ProductsModule,
+    ListingsModule,
   ],
   controllers: [],
   providers: [],

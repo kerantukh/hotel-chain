@@ -69,7 +69,6 @@ export class ApiKeyGuard implements CanActivate {
         sub: apiKeyEntity.user.id,
         email: apiKeyEntity.user.email,
         role: apiKeyEntity.user.role,
-        permissions: apiKeyEntity.user.permissions,
       } as ActiveUserData;
     } catch {
       // Если API-ключ не валидный, выбрасываем исключение
