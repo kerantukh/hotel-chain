@@ -6,7 +6,6 @@ import {
   Patch,
   Param,
   Delete,
-  Query,
 } from '@nestjs/common';
 import { CreateListingUseCase } from '../application/use-cases/create-listing.use-case';
 import { UpdateListingUseCase } from '../application/use-cases/update-listing.use-case';

@@ -24,7 +24,7 @@ export class Booking {
   // Пользователь, который сделал бронирование
   user: User;
 
-  @ManyToOne(() => Listing, (listing) => listing.bookings, {
+  @ManyToOne(() => Listing, (listing) => listing.bookings[], {
     cascade: true,
     nullable: false,
   })

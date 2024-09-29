@@ -4,6 +4,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { IamModule } from './iam/iam.module';
 import { ConfigModule } from '@nestjs/config';
 import { ListingsModule } from './listings/listings.module';
+import { User } from './users/entities/user.entity';
+import { Listing } from './listings/domain/entities/listing.entity';
+import { BookingsModule } from './bookings/bookings.module';
 
 /**
  * Главный модуль приложения
@@ -41,12 +44,16 @@ import { ListingsModule } from './listings/listings.module';
 
       // Синхронизация базы данных
       synchronize: true,
+
+      // Сущности для TypeORM
+      entities: [User, Listing],
     }),
 
     // Модуль аутентификации и авторизации
     IamModule,
 
     ListingsModule,
+    BookingsModule,
   ],
   controllers: [],
   providers: [],

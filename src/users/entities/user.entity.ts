@@ -8,6 +8,8 @@ import {
 import { Role } from '../enums/role.enum';
 
 import { ApiKey } from '../api-keys/entities/api-key.entity';
+import { Listing } from 'src/listings/domain/entities/listing.entity';
+import { Booking } from 'src/bookings/domain/entities/booking.entity';
 
 /**
  * Сущность "Пользователь"
@@ -43,13 +45,22 @@ export class User {
   googleId: string;
 
   @JoinTable()
-  @OneToMany((type) => ApiKey, (apiKey) => apiKey.user)
+  @OneToMany((type) => ApiKey, (apiKey) => apiKey.user, {
+    cascade: true,
+    nullable: true,
+  })
   // Список API-ключей, привязанных к пользователю
   apiKeys: ApiKey[];
 
-  /*
-   NOTE: Having the "permissions" column in combination with the "role"
-    likely does not make sense.
-  */
+  @OneToMany(() => Booking, (booking) => booking.user, {
+    cascade: true,
+    nullable: true,
+  })
+  bookings: Booking[];
 
+  @OneToMany(() => Listing, (listing) => listing.ownerId, {
+    cascade: true,
+    nullable: true,
+  })
+  listings: Listing[];
 }

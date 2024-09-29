@@ -8,15 +8,11 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { CreateBookingUseCase } from '../../application/use-cases/create-booking.use-case';
-import { CreateBookingDto } from '../dto/create-booking.dto';
-import { BookingResponseDto } from '../dto/booking-response.dto';
-import { AuthGuard } from '../guards/auth.guard';
+import { CreateBookingUseCase } from '../application/use-cases/create-booking.use-case';
 import { CancelBookingUseCase } from 'src/bookings/application/use-cases/cancel-booking.use-case';
 
 @Controller('bookings')
-@UseGuards(AuthGuard)
-export class BookingController {
+export class BookingsController {
   constructor(
     private readonly createBookingUseCase: CreateBookingUseCase,
     private readonly cancelBookingUseCase: CancelBookingUseCase,

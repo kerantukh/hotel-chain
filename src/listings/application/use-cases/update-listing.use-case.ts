@@ -1,14 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { ListingRepository } from 'src/listings/domain/repositories/listing.repository';
 import { Listing } from '../../domain/entities/listing.entity';
-import { Money } from '../../domain/value-objects/money.vo';
-import { Address } from '../../domain/value-objects/address.vo';
-import { DateRange } from '../../domain/value-objects/date-range.vo';
-import { UpdateListingDto } from 'src/listings/presentation/dto/update-listing.dto';
+import { UpdateListingDto } from 'src/listings/application/dto/update-listing.dto';
+import { ListingDomainService } from '../../domain/services/listing.domain.service';
 
 @Injectable()
 export class UpdateListingUseCase {
-  constructor(private readonly listingRepository: ListingRepository) {}
+  constructor(
+    private readonly listingRepository: ListingRepository,
+    private readonly listingDomainService: ListingDomainService,
+  ) {}
 
   async execute(dto: UpdateListingDto): Promise<Listing> {
     const listing = await this.listingRepository.findById(dto.id);
@@ -16,38 +17,18 @@ export class UpdateListingUseCase {
       throw new Error('Листинг не найден');
     }
 
-    if (dto.name) listing.name = dto.name;
-    if (dto.description) listing.description = dto.description;
-    if (dto.location) {
-      listing.updateLocation(
-        new Address(
-          dto.location.street,
-          dto.location.city,
-          dto.location.state,
-          dto.location.country,
-          dto.location.zipCode,
-        ),
-      );
-    }
-    if (dto.costPerNight) {
-      listing.updatePrice(
-        new Money(dto.costPerNight.amount, dto.costPerNight.currency),
-      );
-    }
-    if (dto.roomCount) listing.roomCount = dto.roomCount;
-    if (dto.guestLimit) listing.guestLimit = dto.guestLimit;
-    if (dto.features) listing.updateFeatures(dto.features);
-    if (dto.availabilityPeriod) {
-      listing.updateAvailability(
-        new DateRange(
-          dto.availabilityPeriod.startDate,
-          dto.availabilityPeriod.endDate,
-        ),
-      );
-    }
-    if (dto.isAvailable !== undefined) listing.setAvailability(dto.isAvailable);
-
-    listing.modifiedDate = new Date();
+    await this.listingDomainService.updateListing(
+      dto.id,
+      dto.name,
+      dto.description,
+      dto.location,
+      dto.costPerNight,
+      dto.roomCount,
+      dto.guestLimit,
+      dto.features,
+      dto.availabilityPeriod,
+      dto.isAvailable,
+    );
 
     return this.listingRepository.save(listing);
   }

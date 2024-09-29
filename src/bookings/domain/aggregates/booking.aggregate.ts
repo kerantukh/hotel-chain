@@ -55,7 +55,7 @@ export class BookingAggregate {
     return this.booking.status.getStatus();
   }
 
-  // Метод для получения ��ат бронирования
+  // Метод для получения дат бронирования
   getDates(): { startDate: Date; endDate: Date } {
     return {
       startDate: this.booking.dates.getStartDate(),

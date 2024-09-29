@@ -11,6 +11,10 @@ import { PolicyHandlerStorage } from './policy-handlers.storage';
  * если его email заканчивается на "@mail.com".
  */
 export class FrameworkContributorPolicy implements Policy {
+  rules: string[];
+  checkPolicy(userRoles: string[]): boolean {
+    throw new Error('Method not implemented.');
+  }
   name = 'FrameworkContributor';
 }
 

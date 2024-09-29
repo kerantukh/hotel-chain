@@ -1,34 +1,32 @@
 import { Injectable } from '@nestjs/common';
-import { ListingRepository } from 'src/listings/domain/repositories/listing.repository';
-import { Listing } from 'src/listings/domain/entities/listing.entity';
-import { ConcreteListingBuilder } from 'src/listings/domain/builders/listing.builder';
-import { CreateListingDto } from 'src/listings/presentation/dto/create-listing.dto';
+import { ListingDomainService } from '../../domain/services/listing.domain.service';
+import { CreateListingDto } from '../dto/create-listing.dto';
+import { ActiveUserData } from 'src/iam/interfaces/active-user-data.interface';
+import { Listing } from '../../domain/entities/listing.entity';
+import { ListingRepository } from '../../domain/repositories/listing.repository';
 
 @Injectable()
 export class CreateListingUseCase {
-  constructor(private readonly listingRepository: ListingRepository) {}
+  constructor(
+    private readonly listingDomainService: ListingDomainService,
+    private readonly listingRepository: ListingRepository,
+  ) {}
 
-  async execute(dto: CreateListingDto): Promise<Listing> {
-    const listing = new ConcreteListingBuilder()
-      .withName(dto.name)
-      .withDescription(dto.description)
-      .withLocation(
-        dto.location.street,
-        dto.location.city,
-        dto.location.state,
-        dto.location.country,
-        dto.location.zipCode,
-      )
-      .withCostPerNight(dto.costPerNight.amount, dto.costPerNight.currency)
-      .withRoomCount(dto.roomCount)
-      .withGuestLimit(dto.guestLimit)
-      .withFeatures(dto.features)
-      .withAvailabilityPeriod(
-        dto.availabilityPeriod.startDate,
-        dto.availabilityPeriod.endDate,
-      )
-      .build();
+  async execute(dto: CreateListingDto, user: ActiveUserData): Promise<Listing> {
+    // Создаем листинг через доменный сервис
+    const listing = this.listingDomainService.createListing(
+      dto.name,
+      dto.description,
+      dto.location,
+      dto.costPerNight,
+      dto.roomCount,
+      dto.guestLimit,
+      dto.features,
+      dto.availabilityPeriod,
+      user.sub,
+    );
 
+    // Сохраняем листинг через репозиторий
     return this.listingRepository.save(listing);
   }
 }
