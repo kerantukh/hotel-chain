@@ -17,19 +17,11 @@ export class UpdateListingUseCase {
       throw new Error('Листинг не найден');
     }
 
-    await this.listingDomainService.updateListing(
-      dto.id,
-      dto.name,
-      dto.description,
-      dto.location,
-      dto.costPerNight,
-      dto.roomCount,
-      dto.guestLimit,
-      dto.features,
-      dto.availabilityPeriod,
-      dto.isAvailable,
-    );
+    const updatedListing = this.listingDomainService.updateListing(listing, {
+      availabilityPeriod: dto.availabilityPeriod,
+      isAvailable: dto.isAvailable,
+    });
 
-    return this.listingRepository.save(listing);
+    return this.listingRepository.save(updatedListing);
   }
 }

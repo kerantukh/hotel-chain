@@ -5,35 +5,15 @@ import { Score } from '../value-objects/score.vo';
 import { Currency } from '../value-objects/currency.vo';
 import { Coordinates } from '../value-objects/coordinates.vo';
 import { Photo } from '../value-objects/photo.vo';
-
-/**
- * Интерфейс для объявления
- */
-interface IListing {
-  id: number;
-  name: string;
-  description: string;
-  location: Address;
-  costPerNight: Money;
-  roomCount: number;
-  guestLimit: number;
-  score: Score;
-  isAvailable: boolean;
-  features: string[];
-  availabilityPeriod: DateRange;
-  createdDate: Date;
-  modifiedDate: Date;
-  ownerId: number;
-  isDeleted: boolean;
-  currency: Currency;
-  coordinates: Coordinates;
-  images: Photo[];
-}
+import { ListingCreatedEvent } from '../events/listing-created.event';
+import { ListingUpdatedEvent } from '../events/listing-updated.event';
+import { ListingDeletedEvent } from '../events/listing-deleted.event';
+import { ListingValidator } from '../validators/listing.validator';
 
 /**
  * Класс для представления объявления
  */
-export class Listing implements IListing {
+export class Listing {
   id: number;
   name: string;
   description: string;
@@ -52,30 +32,88 @@ export class Listing implements IListing {
   currency: Currency;
   coordinates: Coordinates;
   images: Photo[];
+  bookings: number[];
+  private _events: any[] = [];
 
   /**
    * Конструктор класса Listing
-   * @param data - Данные для инициализации объявления
+   * @param props - Данные для инициализации объявления
    */
-  constructor(data: IListing) {
-    this.id = data.id;
-    this.name = data.name;
-    this.description = data.description;
-    this.location = data.location;
-    this.costPerNight = data.costPerNight;
-    this.roomCount = data.roomCount;
-    this.guestLimit = data.guestLimit;
-    this.score = data.score;
-    this.isAvailable = data.isAvailable;
-    this.features = data.features;
-    this.availabilityPeriod = data.availabilityPeriod;
-    this.createdDate = data.createdDate;
-    this.modifiedDate = data.modifiedDate;
-    this.ownerId = data.ownerId;
-    this.isDeleted = data.isDeleted;
-    this.currency = data.currency;
-    this.coordinates = data.coordinates;
-    this.images = data.images;
+  constructor(props: Partial<Listing>) {
+    Object.assign(this, props);
+    ListingValidator.validateInvariants(this);
+  }
+
+  /**
+   * Создает новое объявление
+   * @param props - Данные для создания объявления
+   * @returns {Listing} Новое объявление
+   */
+  static create(props: Partial<Listing>): Listing {
+    const listing = new Listing(props);
+    listing.addEvent(new ListingCreatedEvent(listing));
+    ListingValidator.validateInvariants(listing);
+    return listing;
+  }
+
+  /**
+   * Обновляет объявление
+   * @param props - Данные для обновления объявления
+   */
+  update(props: Partial<Listing>): void {
+    const oldProps = { ...this };
+    this.updateProperties(props);
+    ListingValidator.validateUpdatedProperties(oldProps, props);
+    this.updateModifiedDate();
+    this.addEvent(new ListingUpdatedEvent(this));
+    ListingValidator.validateInvariants(this);
+  }
+
+  /**
+   * Явное обновление свойств объявления
+   * @param props - Данные для обновления объявления
+   */
+  private updateProperties(props: Partial<Listing>): void {
+    Object.keys(props).forEach((key) => {
+      if (props[key] !== undefined) {
+        this[key] = props[key];
+      }
+    });
+  }
+
+  /**
+   * Удаляет объявление
+   */
+  delete(): void {
+    if (!this.isDeleted) {
+      this.isDeleted = true;
+      this.updateModifiedDate();
+      this.addEvent(new ListingDeletedEvent(this));
+      ListingValidator.validateInvariants(this);
+    }
+  }
+
+  /**
+   * Добавляет событие
+   * @param event - Событие
+   */
+  private addEvent(event: any): void {
+    this._events.push(event);
+  }
+
+  /**
+   * Возвращает события
+   * @returns {any[]} События
+   */
+  getEvents(): any[] {
+    return this._events;
+  }
+
+  /**
+   * Очищает события
+   */
+  clearEvents(): void {
+    this._events = [];
   }
 
   /**
@@ -119,95 +157,13 @@ export class Listing implements IListing {
   }
 
   /**
-   * Возвращает рейтинг объявления
-   * @returns {Score} Рейтинг
-   */
-  getScore(): Score {
-    return this.score;
-  }
-
-  /**
-   * Проверяет, было ли объявление обновлено недавно
-   * @param days - Количество дней для проверки
-   * @returns {boolean} True, если объявление было обновлено недавно
-   */
-  wasUpdatedRecently(days: number): boolean {
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - this.modifiedDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= days;
-  }
-
-  /**
-   * Проверяет, доступно ли объявление на указанную дату
-   * @param date - Дата для проверки
-   * @returns {boolean} True, если объявление доступно
-   */
-  isAvailableOnDate(date: Date): boolean {
-    return this.isAvailable && this.availabilityPeriod.contains(date);
-  }
-
-  /**
-   * Проверяет, доступно ли объявление на указанный период
-   * @param startDate - Начальная дата периода
-   * @param endDate - Конечная дата периода
-   * @returns {boolean} True, если объявление доступно
-   */
-  isAvailableForPeriod(startDate: Date, endDate: Date): boolean {
-    return (
-      this.isAvailable &&
-      this.availabilityPeriod.overlaps(new DateRange(startDate, endDate))
-    );
-  }
-
-  /**
-   * Проверяет, является ли объявление популярным
-   * @returns {boolean} True, если объявление популярно
-   */
-  isPopular(): boolean {
-    return this.score.getValue() >= 4.5;
-  }
-
-  /**
-   * Возвращает стоимость за ночь
-   * @returns {Money} Стоимость за ночь
-   */
-  getCostPerNight(): Money {
-    return this.costPerNight;
-  }
-
-  calculateTotalCost(startDate: Date, endDate: Date): Money {
-    const totalCost =
-      (this.costPerNight.getAmount() *
-        (endDate.getTime() - startDate.getTime())) /
-      (1000 * 60 * 60 * 24);
-    return new Money(totalCost, this.costPerNight.getCurrency());
-  }
-
-  /**
-   * Возвращает период доступности
-   * @returns {DateRange} Период доступности
-   */
-  getAvailabilityPeriod(): DateRange {
-    return this.availabilityPeriod;
-  }
-
-  /**
-   * Проверяет, является ли указанный пользователь владельцем объявления
-   * @param ownerId - Идентификатор пользователя
-   * @returns {boolean} True, если пользователь является владельцем
-   */
-  isOwner(ownerId: number): boolean {
-    return this.ownerId === ownerId;
-  }
-
-  /**
    * Добавляет особенность к объявлению
    * @param feature - Особенность
    */
   addFeature(feature: string): void {
     this.features.push(feature);
     this.updateModifiedDate();
+    ListingValidator.validateInvariants(this);
   }
 
   /**
@@ -217,6 +173,7 @@ export class Listing implements IListing {
   addImage(image: Photo): void {
     this.images.push(image);
     this.updateModifiedDate();
+    ListingValidator.validateInvariants(this);
   }
 
   /**
@@ -226,6 +183,7 @@ export class Listing implements IListing {
   updateName(name: string): void {
     this.name = name;
     this.updateModifiedDate();
+    ListingValidator.validateInvariants(this);
   }
 
   /**
@@ -235,6 +193,7 @@ export class Listing implements IListing {
   updateAvailability(isAvailable: boolean): void {
     this.isAvailable = isAvailable;
     this.updateModifiedDate();
+    ListingValidator.validateInvariants(this);
   }
 
   /**
@@ -244,6 +203,7 @@ export class Listing implements IListing {
   updateDescription(description: string): void {
     this.description = description;
     this.updateModifiedDate();
+    ListingValidator.validateInvariants(this);
   }
 
   /**
@@ -253,6 +213,7 @@ export class Listing implements IListing {
   updateCostPerNight(newCost: Money): void {
     this.costPerNight = newCost;
     this.updateModifiedDate();
+    ListingValidator.validateInvariants(this);
   }
 
   /**
@@ -262,6 +223,7 @@ export class Listing implements IListing {
   updateLocation(newLocation: Address): void {
     this.location = newLocation;
     this.updateModifiedDate();
+    ListingValidator.validateInvariants(this);
   }
 
   /**
@@ -271,6 +233,7 @@ export class Listing implements IListing {
   updateRoomCount(newCount: number): void {
     this.roomCount = newCount;
     this.updateModifiedDate();
+    ListingValidator.validateInvariants(this);
   }
 
   /**
@@ -280,6 +243,7 @@ export class Listing implements IListing {
   updateGuestLimit(newLimit: number): void {
     this.guestLimit = newLimit;
     this.updateModifiedDate();
+    ListingValidator.validateInvariants(this);
   }
 
   /**
@@ -289,6 +253,7 @@ export class Listing implements IListing {
   updateScore(newScore: Score): void {
     this.score = newScore;
     this.updateModifiedDate();
+    ListingValidator.validateInvariants(this);
   }
 
   /**
@@ -298,6 +263,7 @@ export class Listing implements IListing {
   updateCoordinates(newCoordinates: Coordinates): void {
     this.coordinates = newCoordinates;
     this.updateModifiedDate();
+    ListingValidator.validateInvariants(this);
   }
 
   /**
@@ -307,6 +273,7 @@ export class Listing implements IListing {
   updateAvailabilityPeriod(newPeriod: DateRange): void {
     this.availabilityPeriod = newPeriod;
     this.updateModifiedDate();
+    ListingValidator.validateInvariants(this);
   }
 
   /**
@@ -316,6 +283,7 @@ export class Listing implements IListing {
   updateCurrency(newCurrency: Currency): void {
     this.currency = newCurrency;
     this.updateModifiedDate();
+    ListingValidator.validateInvariants(this);
   }
 
   /**
@@ -327,6 +295,7 @@ export class Listing implements IListing {
     if (index > -1) {
       this.features.splice(index, 1);
       this.updateModifiedDate();
+      ListingValidator.validateInvariants(this);
     }
   }
 
@@ -339,6 +308,7 @@ export class Listing implements IListing {
     if (index > -1) {
       this.images.splice(index, 1);
       this.updateModifiedDate();
+      ListingValidator.validateInvariants(this);
     }
   }
 
@@ -348,14 +318,7 @@ export class Listing implements IListing {
   deactivateListing(): void {
     this.isAvailable = false;
     this.updateModifiedDate();
-  }
-
-  /**
-   * Удаляет объявление
-   */
-  removeListing(): void {
-    this.isDeleted = true;
-    this.updateModifiedDate();
+    ListingValidator.validateInvariants(this);
   }
 
   /**
@@ -363,97 +326,6 @@ export class Listing implements IListing {
    */
   private updateModifiedDate(): void {
     this.modifiedDate = new Date();
-    this.validateInvariants();
-  }
-
-  /**
-   * Валидация инвариантов
-   * @throws {Error} Если инварианты нарушены
-   */
-  private validateInvariants(): void {
-    this.validateRoomCount();
-    this.validateGuestLimit();
-    this.validateCostPerNight();
-    this.validateName();
-    this.validateDescription();
-    this.validateCurrency();
-    this.validateLocation();
-    this.validateCoordinates();
-    this.validateAvailabilityPeriod();
-    this.validateScore();
-  }
-
-  private validateRoomCount(): void {
-    if (this.roomCount <= 0) {
-      throw new Error(
-        'Количество комнат не может быть отрицательным или равным нулю.',
-      );
-    }
-  }
-
-  private validateGuestLimit(): void {
-    if (this.guestLimit <= 0) {
-      throw new Error(
-        'Лимит гостей не может быть отрицательным или равным нулю.',
-      );
-    }
-  }
-
-  private validateCostPerNight(): void {
-    if (!this.costPerNight.isValid()) {
-      throw new Error('Некорректная стоимость за ночь.');
-    }
-  }
-
-  private validateName(): void {
-    if (this.name.trim() === '') {
-      throw new Error('Название не может быть пустым.');
-    }
-  }
-
-  private validateDescription(): void {
-    if (this.description.trim() === '') {
-      throw new Error('Описание не может быть пустым.');
-    }
-  }
-
-  private validateCurrency(): void {
-    if (!Currency.isValid(this.currency)) {
-      throw new Error('Некорректная валюта.');
-    }
-  }
-
-  private validateLocation(): void {
-    if (!this.location.isValid()) {
-      throw new Error('Некорректный адрес.');
-    }
-  }
-
-  private validateCoordinates(): void {
-    if (
-      !Coordinates.isValid(
-        this.coordinates.getLatitude(),
-        this.coordinates.getLongitude(),
-      )
-    ) {
-      throw new Error('Некорректные координаты.');
-    }
-  }
-
-  private validateAvailabilityPeriod(): void {
-    if (
-      !DateRange.isValid(
-        this.availabilityPeriod.getStartDate(),
-        this.availabilityPeriod.getEndDate(),
-      )
-    ) {
-      throw new Error('Некорректный период доступности.');
-    }
-  }
-
-  private validateScore(): void {
-    if (!Score.isValid(this.score.getValue())) {
-      throw new Error('Некорректный рейтинг.');
-    }
+    ListingValidator.validateInvariants(this);
   }
 }

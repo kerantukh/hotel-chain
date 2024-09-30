@@ -14,17 +14,17 @@ export class CreateListingUseCase {
 
   async execute(dto: CreateListingDto, user: ActiveUserData): Promise<Listing> {
     // Создаем листинг через доменный сервис
-    const listing = this.listingDomainService.createListing(
-      dto.name,
-      dto.description,
-      dto.location,
-      dto.costPerNight,
-      dto.roomCount,
-      dto.guestLimit,
-      dto.features,
-      dto.availabilityPeriod,
-      user.sub,
-    );
+    const listing = this.listingDomainService.createListing({
+      name: dto.name,
+      description: dto.description,
+      location: dto.location,
+      costPerNight: dto.costPerNight,
+      roomCount: dto.roomCount,
+      guestLimit: dto.guestLimit,
+      features: dto.features,
+      availabilityPeriod: dto.availabilityPeriod,
+      ownerId: user.sub,
+    });
 
     // Сохраняем листинг через репозиторий
     return this.listingRepository.save(listing);

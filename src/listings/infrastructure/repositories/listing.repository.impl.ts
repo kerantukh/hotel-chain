@@ -7,7 +7,7 @@ export class ListingRepositoryImpl implements ListingRepository {
   private listings: ListingOrmEntity[] = [];
 
   private toOrmEntity(listing: Listing): ListingOrmEntity {
-    const ormEntity = new ListingOrmEntity();
+    const ormEntity = new ListingOrmEntity(listing);
     ormEntity.id = listing.id;
     ormEntity.name = listing.name;
     ormEntity.description = listing.description;
@@ -31,7 +31,7 @@ export class ListingRepositoryImpl implements ListingRepository {
   }
 
   private toDomainEntity(ormEntity: ListingOrmEntity): Listing {
-    const listing = new Listing();
+    const listing = new Listing(ormEntity);
     listing.id = ormEntity.id;
     listing.name = ormEntity.name;
     listing.description = ormEntity.description;

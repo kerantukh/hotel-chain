@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  ManyToMany,
+  OneToMany,
+} from 'typeorm';
 import { Listing } from 'src/listings/domain/entities/listing.entity';
 import { User } from 'src/users/entities/user.entity';
 import { Address } from '../domain/value-objects/address.vo';
@@ -8,8 +15,13 @@ import { DateRange } from '../domain/value-objects/date-range.vo';
 import { Currency } from '../domain/value-objects/currency.vo';
 import { Coordinates } from '../domain/value-objects/coordinates.vo';
 import { Photo } from '../domain/value-objects/photo.vo';
+import { Booking } from 'src/bookings/domain/entities/booking.entity';
 @Entity('listings')
 export class ListingOrmEntity extends Listing {
+  constructor(listing: Listing) {
+    super(listing); // Вызов конструктора родительского класса
+  }
+
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -63,4 +75,7 @@ export class ListingOrmEntity extends Listing {
 
   @ManyToOne(() => User, (user) => user.listings, { nullable: false })
   user: User;
+
+  @OneToMany(() => Booking, (booking) => booking.listings)
+  bookings: number[];
 }

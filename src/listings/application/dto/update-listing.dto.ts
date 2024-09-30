@@ -15,4 +15,5 @@ export class UpdateListingDto extends PartialType(CreateListingDto) {
   features?: string[];
   availabilityPeriod?: DateRange;
   isAvailable?: boolean;
+  bookings?: number[];
 }
